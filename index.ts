@@ -1,6 +1,6 @@
 const w : number = window.innerWidth
 const h : number = window.innerHeight
-const scGap : number = 0.02
+const scGap : number = 0.025
 const strokeFactor : number = 90
 const sizeFactor : number = 8
 const delay : number = 30
@@ -28,7 +28,9 @@ class Stage {
 
     handleTap() {
         this.canvas.onmousedown = (event) => {
-            this.vaContainer.handleTap(event.offsetX, event.offsetY)
+            this.vaContainer.handleTap(event.offsetX, event.offsetY, () => {
+                this.render()
+            })
         }
     }
 
@@ -79,15 +81,15 @@ class ScaleUtil {
     }
 
     static cosify(scale : number, n : number) : number {
-        return Math.sin(scale * Math.PI / n)
+        return Math.cos(scale * Math.PI / n)
     }
 }
 
 class DrawingUtil {
 
-    static drawArc(context : CanvasRenderingContext2D, r : number, sc : number) {
-        const sf : number = ScaleUtil.sinify(sc, 1)
+    static drawArc(context : CanvasRenderingContext2D, r : number, sf : number) {
         const deg = 360 * sf
+        //console.log(deg)
         context.beginPath()
         context.moveTo(0, 0)
         for (var i = 0; i <= deg; i++) {
@@ -112,8 +114,9 @@ class DrawingUtil {
         const sf1 : number = ScaleUtil.sinify(sc1, 2)
         const sf2 : number = ScaleUtil.sinify(sc2, 1)
         const sf3 : number = ScaleUtil.cosify(sc3, 2)
-        const sf1a : number = sf2 <= 0 ? sf1 : 0
-        const sf3a : number = sf2 >= 1 ? sf3 : 0
+        const sf1a : number = sc2 <= 0 ? sf1 : 0
+        const sf3a : number = sc2 >= 1 ? sf3 : 0
+        console.log(`sfactor:${sf3a}`)
         DrawingUtil.drawLine(context, 0, 0, size * (sf1a + sf3a), 0)
         DrawingUtil.drawArc(context, size, sf2)
     }
@@ -124,7 +127,10 @@ class DrawingUtil {
         context.lineWidth = Math.min(w, h) / strokeFactor
         context.strokeStyle = foreColor
         context.fillStyle = foreColor
+        context.save()
+        context.translate(x, y)
         DrawingUtil.drawVanishingArc(context, size, sc)
+        context.restore()
     }
 }
 
@@ -180,25 +186,28 @@ class VanishingArcContainer {
         })
     }
 
-    update() {
+    update(cb : Function) {
         for (var i = this.vaNodes.length - 1; i >= 0; i--) {
             const va : VANode = this.vaNodes[i]
             va.update(() => {
                 this.vaNodes.splice(i, 1)
                 if (this.vaNodes.length == 0) {
                     this.animator.stop()
+                    cb()
                 }
             })
         }
     }
 
-    handleTap(x : number, y : number) {
+    handleTap(x : number, y : number, cb : Function) {
         const vaNode = new VANode(x, y)
+        console.log(vaNode)
         vaNode.startUpdating(() => {
             this.vaNodes.push(vaNode)
             if (this.vaNodes.length == 1) {
                 this.animator.start(() => {
-                    this.update()
+                    cb()
+                    this.update(cb)
                 })
             }
         })
