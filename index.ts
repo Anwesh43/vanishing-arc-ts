@@ -166,3 +166,39 @@ class VANode {
         this.state.startUpdating(cb)
     }
 }
+
+class VanishingArcContainer {
+
+    vaNodes : Array<VANode> = new Array()
+    animator : Animator = new Animator()
+
+    draw(context : CanvasRenderingContext2D) {
+        this.vaNodes.forEach((vaNode) => {
+            vaNode.draw(context)
+        })
+    }
+
+    update() {
+        for (var i = this.vaNodes.length - 1; i >= 0; i--) {
+            const va : VANode = this.vaNodes[i]
+            va.update(() => {
+                this.vaNodes.splice(i, 1)
+                if (this.vaNodes.length == 0) {
+                    this.animator.stop()
+                }
+            })
+        }
+    }
+
+    handleTap(x : number, y : number) {
+        const vaNode = new VANode(x, y)
+        vaNode.startUpdating(() => {
+            this.vaNodes.push(vaNode)
+            if (this.vaNodes.length == 1) {
+                this.animator.start(() => {
+                    this.update()
+                })
+            }
+        })
+    }
+}
