@@ -11,6 +11,7 @@ class Stage {
 
     canvas : HTMLCanvasElement = document.createElement('canvas')
     context : CanvasRenderingContext2D
+    vaContainer : VanishingArcContainer = new VanishingArcContainer()
 
     initCanvas() {
         this.canvas.width = w
@@ -22,11 +23,12 @@ class Stage {
     render() {
         this.context.fillStyle = backColor
         this.context.fillRect(0, 0, w, h)
+        this.vaContainer.draw(this.context)
     }
 
     handleTap() {
-        this.canvas.onmousedown = () => {
-
+        this.canvas.onmousedown = (event) => {
+            this.vaContainer.handleTap(event.offsetX, event.offsetY)
         }
     }
 
