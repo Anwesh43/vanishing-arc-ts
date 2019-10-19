@@ -2,7 +2,7 @@ const w : number = window.innerWidth
 const h : number = window.innerHeight
 const scGap : number = 0.02
 const strokeFactor : number = 90
-const sizeFactor : number = 2.9
+const sizeFactor : number = 8
 const delay : number = 30
 const foreColor : string = "#2196F3"
 const backColor: string = "#BDBDBD"
@@ -72,7 +72,56 @@ class ScaleUtil {
         return Math.min(1 / n, ScaleUtil.maxScale(scale, i, n)) * n
     }
 
-    static sinify(scale : number) : number {
-        return Math.sin(scale * Math.PI)
+    static sinify(scale : number, n : number) : number {
+        return Math.sin(scale * Math.PI / n)
+    }
+
+    static cosify(scale : number, n : number) : number {
+        return Math.sin(scale * Math.PI / n)
+    }
+}
+
+class DrawingUtil {
+
+    static drawArc(context : CanvasRenderingContext2D, r : number, sc : number) {
+        const sf : number = ScaleUtil.sinify(sc, 1)
+        const deg = 360 * sf
+        context.beginPath()
+        context.moveTo(0, 0)
+        for (var i = 0; i <= deg; i++) {
+            const x : number = r * Math.cos(i * Math.PI / 180)
+            const y : number = r * Math.sin(i * Math.PI / 180)
+            context.lineTo(x, y)
+        }
+        context.fill()
+    }
+
+    static drawLine(context : CanvasRenderingContext2D, x1 : number, y1 : number, x2 : number, y2 : number) {
+        context.beginPath()
+        context.moveTo(x1, y1)
+        context.lineTo(x2, y2)
+        context.stroke()
+    }
+
+    static drawVanishingArc(context : CanvasRenderingContext2D, size : number, scale : number) {
+        const sc1 : number = ScaleUtil.divideScale(scale, 0, 3)
+        const sc2 : number = ScaleUtil.divideScale(scale, 1, 3)
+        const sc3 : number = ScaleUtil.divideScale(scale, 2, 3)
+        const sf1 : number = ScaleUtil.sinify(sc1, 2)
+        const sf2 : number = ScaleUtil.sinify(sc2, 1)
+        const sf3 : number = ScaleUtil.cosify(sc3, 2)
+        const sf1a : number = sf2 <= 0 ? sf1 : 0
+        const sf3a : number = sf2 >= 1 ? sf3 : 0
+        DrawingUtil.drawLine(context, 0, 0, size * (sf1a + sf3a), 0)
+        DrawingUtil.drawArc(context, size, sf2)
+    }
+
+    static drawVANode(context : CanvasRenderingContext2D, i : number, sc : number) {
+        const size : number = Math.min(w, h) / sizeFactor
+        context.lineCap = 'round'
+        context.lineWidth = Math.min(w, h) / strokeFactor
+        context.strokeStyle = foreColor
+        context.fillStyle = foreColor
+        DrawingUtil.drawVanishingArc(context, size, sc)
     }
 }
