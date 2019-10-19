@@ -116,7 +116,7 @@ class DrawingUtil {
         DrawingUtil.drawArc(context, size, sf2)
     }
 
-    static drawVANode(context : CanvasRenderingContext2D, i : number, sc : number) {
+    static drawVANode(context : CanvasRenderingContext2D, x : number, y : number, sc : number) {
         const size : number = Math.min(w, h) / sizeFactor
         context.lineCap = 'round'
         context.lineWidth = Math.min(w, h) / strokeFactor
@@ -143,5 +143,26 @@ class Animator {
             this.animated = false
             clearInterval(this.interval)
         }
+    }
+}
+
+class VANode {
+
+    state : State = new State()
+
+    constructor(private x : number, private y : number) {
+
+    }
+
+    draw(context : CanvasRenderingContext2D) {
+        DrawingUtil.drawVANode(context, this.x, this.y, this.state.scale)
+    }
+
+    update(cb : Function) {
+        this.state.update(cb)
+    }
+
+    startUpdating(cb : Function) {
+        this.state.startUpdating(cb)
     }
 }
